@@ -72,7 +72,7 @@ final class FixersBench
             new \LimitIterator(
                 Finder::create()->in($path)->getIterator(),
                 0,
-                null === $envVarFilesLimit ? $envVarFilesLimit : 25,
+                null !== $envVarFilesLimit ? $envVarFilesLimit : 25,
             ),
             $this->fixers,
             new NullDiffer(),
