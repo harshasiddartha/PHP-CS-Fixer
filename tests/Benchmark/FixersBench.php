@@ -144,7 +144,7 @@ final class FixersBench
             $samples = $fixer->getDefinition()->getCodeSamples();
 
             if (0 === \count($samples)) {
-                throw new \Exception(\sprintf("No samples for '%s'.!", $fixerName));
+                throw new \Exception(\sprintf("No code samples for '%s'.", $fixerName));
             }
 
             foreach ($samples as $counter => $sample) {
