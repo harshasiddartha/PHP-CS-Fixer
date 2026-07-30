@@ -32,7 +32,7 @@ use Symfony\Component\Finder\Finder;
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise.
  */
-final class FixersBenchmark
+final class FixersBench
 {
     private Runner $runner;
     private FixerFactory $fixerFactory;
@@ -65,12 +65,14 @@ final class FixersBenchmark
             [],
         );
 
+        $envVarFilesLimit = filter_var(getenv('PHP_CS_FIXER_BENCH_FILES_LIMIT'), \FILTER_VALIDATE_INT, \FILTER_NULL_ON_FAILURE);
+
         $path = __DIR__.\DIRECTORY_SEPARATOR.'..'.\DIRECTORY_SEPARATOR.'..'.\DIRECTORY_SEPARATOR.'src';
         $this->runner = new Runner(
             new \LimitIterator(
                 Finder::create()->in($path)->getIterator(),
                 0,
-                50,
+                null === $envVarFilesLimit ? $envVarFilesLimit : 25,
             ),
             $this->fixers,
             new NullDiffer(),
@@ -85,8 +87,12 @@ final class FixersBenchmark
         );
     }
 
+    /**
+     * @param array{rule: string, config: array<string, mixed>} $params
+     */
     public function setUp(array $params): void
     {
+        \assert(isset($this->fixersByName[$params['rule']]));
         $fixer = $this->fixersByName[$params['rule']];
 
         if ($fixer instanceof ConfigurableFixerInterface) {
@@ -100,6 +106,8 @@ final class FixersBenchmark
     }
 
     /**
+     * @param array{rule: string, config: array<string, mixed>} $params
+     *
      * @ParamProviders({
      *     "provideFixerNames"
      * })
@@ -113,12 +121,24 @@ final class FixersBenchmark
         $this->runner->fix();
     }
 
+    /**
+     * @return iterable<string, array{rule: string, config: array<string, mixed>}>
+     */
     public function provideFixerNames(): iterable
     {
         $names = array_keys($this->fixersByName);
         sort($names);
-$count = 0;
+
+        $ruleToLimitTo = getenv('PHP_CS_FIXER_BENCH_RULE');
+        if (false !== $ruleToLimitTo && '' !== $ruleToLimitTo) {
+            if (!isset($this->fixersByName[$ruleToLimitTo])) {
+                throw new \Exception(\sprintf("PHP_CS_FIXER_BENCH_RULE configured to non-existing rule: '%s'.", $ruleToLimitTo));
+            }
+            $names = [$ruleToLimitTo];
+        }
+
         foreach ($names as $fixerName) {
+            \assert(isset($this->fixersByName[$fixerName]));
             $fixer = $this->fixersByName[$fixerName];
             $samples = $fixer->getDefinition()->getCodeSamples();
 

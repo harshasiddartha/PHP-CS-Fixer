@@ -325,7 +325,7 @@ jobs:
       - name: Add PHPBench
         run: |
           composer remove --dev --no-update infection/infection
-          composer require --dev --no-update phpbench/phpbench:^1
+          composer require --dev --no-update phpbench/phpbench:^1.7
 
       - name: Setup PHP with Composer deps
         uses: ./.github/composite-actions/setup-php-with-composer-deps
@@ -336,7 +336,8 @@ jobs:
       - name: Run individual rules
         env:
           PHP_CS_FIXER_FUTURE_MODE: 1
-        run: ./vendor/bin/phpbench run --report=aggregate
+        run: |
+          ./vendor/bin/phpbench run --report="aggregate-preview"
 
   releasable:
     needs: [setup, tests, bench]
