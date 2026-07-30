@@ -102,6 +102,7 @@ final class FixersBench
         // manipulate internals of Runner to avoid creating new Runner for each test
         \Closure::bind(static function (Runner $runner) use ($fixer): void {
             $runner->fixers = [$fixer];
+            $runner->fixersByName = [$fixer->getName() => $fixer];
         }, null, Runner::class)($this->runner);
     }
 
